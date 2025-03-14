@@ -20,8 +20,6 @@ alltxts_test = [text for text,pol in data_test]
 llabs_test = [pol for text,pol in data_test]
 
 alltxts, alllabs = alltxts_train, llabs_train
-alltxts, alllabs = select_subset(alltxts, alllabs)
-alltxts_test, llabs_test = select_subset(alltxts_test, llabs_test)
 
 y_test = llabs_test
 
