@@ -13,6 +13,7 @@ from sklearn.exceptions import ConvergenceWarning
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.combine import SMOTETomek
+from collections import Counter
 
 # Apply global settings
 plt.rcParams.update({
@@ -84,7 +85,7 @@ class BasicTextClassificationModel:
                                                                   undersampling=undersampling, oversampling=oversampling)
             results.append([None, score_nb, score_lr, score_svm, i])  # No parameter
 
-        filename = self.produce_file_name(vectorizer_type, None, n_gram_range, True)
+        filename = self.produce_file_name(vectorizer_type, None, n_gram_range, True, undersampling, oversampling)
 
         # Save results to file
         self.save_results(filename, results)
@@ -156,68 +157,7 @@ class BasicTextClassificationModel:
 
         return np.array(results)
 
-    def run_cv_opt_param(self, results, parameter, n_grame_range=(1,1), cfold=5, vectorizer_type='count', max_feature=False,
-                         undersampling=False, oversampling=False, verbose=0):
-        
-        if verbose == 1:
-            print(f'Start of cross validation optimized param={parameter} fitting for each process and model....')
-
-        tuned_params = self.dict_opt_param(results, parameter, verbose=0)
-
-        nb_mean_scores = []
-        lr_mean_scores = []
-        svm_mean_scores = []
-
-        i = 0
-        for txt in self.processed_txts:
-            title = self.titles_prcs[i]
-            opt_params = tuned_params[title]
-
-            # Vectorizer
-            vectorizer_nb, vectorizer_lr, vectorizer_svm = self.build_vectorizers(parameter, opt_params, vectorizer_type,
-                                                                                  n_gram_range=n_grame_range,
-                                                                                  max_feature_value=max_feature)
-
-            #Model
-            nb_clf = MultinomialNB()
-            lr_clf = LogisticRegression(random_state=0, solver='liblinear', max_iter=50000, tol=1e-8, C=1.0)
-            svm_clf = LinearSVC(random_state=0, tol=1e-8, max_iter=50000)
-
-            # Perform k-fold cross-validation
-            cv_scores_nb = self.bow_cross_validation(txt, clf=nb_clf, cfold=cfold, vectorizer=vectorizer_nb,
-                                                     undersampling=undersampling, oversampling=oversampling)
-            
-            cv_scores_lr = self.bow_cross_validation(txt, clf=lr_clf, cfold=cfold, vectorizer=vectorizer_lr,
-                                                     undersampling=undersampling, oversampling=oversampling)
-            
-            cv_scores_svm = self.bow_cross_validation(txt, clf=svm_clf, cfold=cfold, vectorizer=vectorizer_svm,
-                                                     undersampling=undersampling, oversampling=oversampling)
-
-            if verbose == 1:
-                # Print the cross-validation results
-                print(f'Process={title}')
-                if verbose == 2:
-                    print(f"Cross-validation score nbs: {cv_scores_nb}")
-                    print(f"Cross-validation score lr: {cv_scores_lr}")
-                    print(f"Cross-validation score svm: {cv_scores_svm}")
-
-            nb_mean_scores.append(np.mean(cv_scores_nb))
-            lr_mean_scores.append(np.mean(cv_scores_lr))
-            svm_mean_scores.append(np.mean(cv_scores_svm))
-
-            if verbose == 2:
-                print(f"Mean accuracy: nb={np.mean(cv_scores_nb):.3f}, lr={np.mean(cv_scores_lr):.3f}, svm={np.mean(cv_scores_svm):.3f}")
-                print()
-
-            i += 1
-
-        if verbose == 1:
-            print(f'Cross validation fitting param={parameter} for NB, LR, and SVM finished')
-            print()
-        
-        return nb_mean_scores, lr_mean_scores, svm_mean_scores
-
-    def evaluate_tfidf_variations(self):
+    def evaluate_tfidf_variations(self, undersampling=False, oversampling=False):
         # Define baseline TF-IDF parameters.
         baseline_params = {"use_idf": False, "smooth_idf": False, "sublinear_tf": False}
         
@@ -237,7 +177,7 @@ class BasicTextClassificationModel:
             svm_scores = []
             for txt in self.processed_txts:
                 vectorizer = TfidfVectorizer(**params)
-                _, _, acc_svm = self.accuracy_models(txt, vectorizer=vectorizer)
+                _, _, acc_svm = self.accuracy_models(txt, vectorizer=vectorizer, oversampling=oversampling, undersampling=undersampling)
                 svm_scores.append(acc_svm)
 
             var_svm_scores.append(svm_scores)
@@ -253,38 +193,6 @@ class BasicTextClassificationModel:
 
         return tuple(variations[opt_var].values())
 
-    def dict_opt_param(self, results, parameter, verbose=0):
-        best_parameters = {}
-        processes = np.unique(results[:, 4])
-
-        if verbose:
-            print(f'Retreive optimized {parameter} for each model and process class....')
-            print()
-        
-        # Loop through each unique process index
-        for proc in processes:
-            # Filter data for the current process
-            process_data = results[results[:, 4] == proc]
-            proc_idx = int(proc)
-            process_best = {}
-            
-            # Loop through each model
-            for col_idx, model_key in zip(range(1, 4), ["nb", "lr", "svm"]):
-                # Find the index where the score for the current model is maximized.
-                max_idx = np.argmax(process_data[:, col_idx])
-                best_param = process_data[max_idx, 0]
-                best_score = process_data[max_idx, col_idx]
-                
-                if verbose:
-                    print(f"Process '{self.titles_prcs[proc_idx]}', model '{model_key}': "
-                        f"Best {parameter} = {best_param} with score {best_score:.4f}")
-                
-                process_best[model_key] = best_param
-            
-            best_parameters[self.titles_prcs[proc_idx]] = process_best
-
-        return best_parameters
-    
     def build_vectorizers(self, parameter, opt_params, vectorizer_type='count', n_gram_range=(1,1), use_max_feature=False, max_feature_value=8000,
                         use_idf=True, smooth_idf=True, sublinear_tf=True):
 
@@ -440,64 +348,7 @@ class BasicTextClassificationModel:
         plt.savefig(os.path.join(self.figures_folder, f"{figure_name}_vectorizer_tuning.jpeg"))
         plt.close()
 
-    def plot_results_cv(self, basic_result, nb_scores, lr_scores, svm_scores, parameters, figure_name='count'):
-
-        # Define bar width
-        bar_width = 0.2
-        
-        # Aggregate the basic results (here, taking the mean across all processes).
-        # You can change the aggregation if needed.
-        basic_nb = np.mean(basic_result[:, 1])
-        basic_lr = np.mean(basic_result[:, 2])
-        basic_svm = np.mean(basic_result[:, 3])
-        
-        # Determine number of tuned processes (from self.titles_prcs)
-        num_processes = len(self.titles_prcs)
-        # We add one extra category for the basic (no tuning) result.
-        x = np.arange(num_processes + 1)
-        
-        # New x-axis labels: first group is the basic result.
-        new_xticklabels = ["No process & tuning"] + self.titles_prcs
-        
-        # Create subplots, one per parameter configuration
-        fig, axes = plt.subplots(1, len(parameters), figsize=(22, 6), sharey=True)
-        plt.subplots_adjust(wspace=0.05)
-        
-        # Iterate through each parameter optimization subplot
-        for i, ax in enumerate(axes):
-            # For each parameter configuration, the tuned scores are assumed to be an array of length num_processes.
-            # We prepend the basic result scores.
-            new_nb = np.concatenate(([basic_nb], nb_scores[i]))
-            new_lr = np.concatenate(([basic_lr], lr_scores[i]))
-            new_svm = np.concatenate(([basic_svm], svm_scores[i]))
-            
-            # Plot the bars for each model, shifting positions slightly for clarity.
-            ax.bar(x - bar_width, new_nb, width=bar_width, color='blue', alpha=0.7, label='Naïve Bayes')
-            ax.bar(x,         new_lr, width=bar_width, color='green', alpha=0.7, label='Logistic Regression')
-            ax.bar(x + bar_width, new_svm, width=bar_width, color='red', alpha=0.7, label='SVM')
-            
-            # Set title for the subplot using the tuned parameter label.
-            ax.set_title(parameters[i], fontsize=12)
-            # Set the x-axis ticks and labels.
-            ax.set_xticks(x)
-            ax.set_xticklabels(new_xticklabels, rotation=15, ha='right')
-            # Customize grid and y-axis limits.
-            ax.grid(axis='y', linestyle='--', alpha=0.6)
-            ax.set_ylim(0.60, 1.00)
-        
-        # Common y-label for the figure.
-        fig.supylabel("Mean Score CV", fontsize=12)
-        
-        # Create a common legend for all subplots.
-        handles = [plt.Rectangle((0, 0), 1, 1, color=color, alpha=0.7) for color in ['blue', 'green', 'red']]
-        fig.legend(handles, ['Naïve Bayes', 'Logistic Regression', 'SVM'], loc='upper right', ncol=3, fontsize=12)
-        
-        # Adjust layout to leave space for the legend and title.
-        plt.tight_layout(rect=[0, 0, 1, 0.92])
-        plt.savefig(os.path.join(self.figures_folder, f"cv_validation_{figure_name}.jpeg"))
-        plt.close()
-
-    def produce_file_name(self, vectorizer_type, parameter_name, n_gram_range, basic=False):
+    def produce_file_name(self, vectorizer_type, parameter_name, n_gram_range, basic=False, undersampling=False, oversampling=False):
         
         if basic == False:
             if n_gram_range != (1,1):
@@ -505,9 +356,18 @@ class BasicTextClassificationModel:
 
             return f"results_{vectorizer_type}_{parameter_name}.txt"
         
-        if n_gram_range != (1,1):
+        if (n_gram_range != (1,1)) & (undersampling == True):
+            return f"results_basic_{vectorizer_type}_under_ngram{n_gram_range[0]}-{n_gram_range[1]}.txt"
+        elif (n_gram_range != (1,1)) & (oversampling == True):
+            return f"results_basic_{vectorizer_type}_over_ngram{n_gram_range[0]}-{n_gram_range[1]}.txt"
+        elif n_gram_range != (1,1):
             return f"results_basic_{vectorizer_type}_ngram{n_gram_range[0]}-{n_gram_range[1]}.txt"
-
+ 
+        if undersampling == True:
+            return f"results_basic_{vectorizer_type}_under.txt"
+        elif oversampling == True:
+            return f"results_basic_{vectorizer_type}_over.txt"
+        
         return f"results_basic_{vectorizer_type}.txt"
 
     def save_results(self, filename, results):

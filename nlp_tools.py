@@ -112,7 +112,7 @@ def select_subset(alltxts, alllabs):
     class1_indices = np.where(alllabs == 1)[0]  # Indices where label is 1
 
     # Select 10 samples from each class (if available)
-    selected_class0 = class0_indices[:50]  # First 10 samples of class 0
+    selected_class0 = class0_indices[:100]  # First 10 samples of class 0
     selected_class1 = class1_indices[:50]  # First 10 samples of class 1
 
     # Combine selected indices
@@ -135,9 +135,9 @@ def best_oversampler_undersampler(basic_results_under, basic_results_over):
 
     # Return sampling parameters
     if mean_result_under > mean_result_over:
-        return True, False, basic_results_under
+        return True, False
     
-    return False, True, basic_results_over
+    return False, True
 
 
 def get_best_ngram(n_grams_basic_results, titles_n_grams, sampling=False):

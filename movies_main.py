@@ -20,7 +20,6 @@ alltxts_test = [text for text,pol in data_test]
 llabs_test = [pol for text,pol in data_test]
 
 alltxts, alllabs = alltxts_train, llabs_train
-
 y_test = llabs_test
 
 print('step 1: processing data')
