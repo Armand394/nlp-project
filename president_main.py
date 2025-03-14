@@ -10,9 +10,9 @@ print('step 0: loading data')
 # Retreive data
 current_dir = os.getcwd()
 target_path = os.path.join(current_dir, "data", "AFDpresidentutf8", "corpus.tache1.learn.utf8.txt")
-alltxts,alllabs = load_pres(target_path)
+alltxts, alllabs = load_pres(target_path)
 
-alltxts_train, alltxts_test, y_train, y_test = train_test_split(alltxts, alllabs, test_size=0.20 random_state=32, stratify=alllabs)
+alltxts_train, alltxts_test, y_train, y_test = train_test_split(alltxts, alllabs, test_size=0.20, random_state=32, stratify=alllabs)
 alltxts, alllabs = alltxts_train, y_train
 
 # Print split
@@ -82,21 +82,21 @@ undersampling_cv, oversampling_cv = best_oversampler_undersampler(basic_results_
 if os.path.exists(os.path.join(results_path, "results_count_max_features.txt")):
     tune_maxf = np.loadtxt(os.path.join(results_path, "results_count_max_features.txt"), delimiter=",")
 else:
-    tune_maxf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(1000,10000,1000), parameter_name='max_features',
+    tune_maxf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(5000,35000,500), parameter_name='max_features',
                                                             undersampling=oversampling_cv, oversampling=oversampling_cv)
 
 # Model results with max_df tuning
 if os.path.exists(os.path.join(results_path, "results_count_max_df.txt")):
     tune_max_df = np.loadtxt(os.path.join(results_path, "results_count_max_df.txt"), delimiter=",")
 else:
-    tune_max_df = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.2,0.9,0.1), parameter_name='max_df',
+    tune_max_df = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.2,0.9,0.03), parameter_name='max_df',
                                                             undersampling=oversampling_cv, oversampling=oversampling_cv)
 
 # Model results with min_df tuning
 if os.path.exists(os.path.join(results_path, "results_count_min_df.txt")):
     tune_min_df = np.loadtxt(os.path.join(results_path, "results_count_min_df.txt"), delimiter=",")
 else:
-    tune_min_df = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.01,0.08,0.01), parameter_name='min_df',
+    tune_min_df = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.002,0.08,0.002), parameter_name='min_df',
                                                             undersampling=oversampling_cv, oversampling=oversampling_cv)
 
 # Plot grid search results
@@ -127,7 +127,7 @@ tfidf_params = analysis_pres.evaluate_tfidf_variations()
 if os.path.exists(os.path.join(results_path, "results_tfidf_max_features.txt")):
     maxf_tfidf = np.loadtxt(os.path.join(results_path, "results_tfidf_max_features.txt"), delimiter=",")
 else:
-    maxf_tfidf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(1000,10000,1000), vectorizer_type='tfidf',
+    maxf_tfidf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(5000,35000,500), vectorizer_type='tfidf',
                                                                 parameters_tf_idf=tfidf_params, parameter_name='max_features',
                                                                 undersampling=undersampling_tf, oversampling=oversampling_tf)
                                                                
@@ -135,7 +135,7 @@ else:
 if os.path.exists(os.path.join(results_path, "results_tfidf_max_df.txt")):
     max_df_tfidf = np.loadtxt(os.path.join(results_path, "results_tfidf_max_df.txt"), delimiter=",")
 else:
-    max_df_tfidf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.2,0.9,0.1), vectorizer_type='tfidf',
+    max_df_tfidf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.2,0.9,0.03), vectorizer_type='tfidf',
                                                                   parameters_tf_idf=tfidf_params, parameter_name='max_df',
                                                                   undersampling=undersampling_tf, oversampling=oversampling_tf)
                                                                   
@@ -143,7 +143,7 @@ else:
 if os.path.exists(os.path.join(results_path, "results_tfidf_min_df.txt")):
     min_df_tfidf = np.loadtxt(os.path.join(results_path, "results_tfidf_min_df.txt"), delimiter=",")
 else:
-    min_df_tfidf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.01,0.08,0.01), vectorizer_type='tfidf',
+    min_df_tfidf = analysis_pres.vectorizer_parameter_analysis(parameters_loop=(0.002,0.08,0.002), vectorizer_type='tfidf',
                                                                     parameters_tf_idf=tfidf_params, parameter_name='min_df',
                                                                     undersampling=undersampling_tf, oversampling=oversampling_tf)
 
@@ -177,15 +177,16 @@ tfidf_params = analysis_pres.evaluate_tfidf_variations(undersampling=undersampli
 if os.path.exists(os.path.join(results_path, f"results_tfidf_max_features_ngram{n1}-{n2}.txt")):
     maxf_ngram = np.loadtxt(os.path.join(results_path, f"results_tfidf_max_features_ngram{n1}-{n2}.txt"), delimiter=",")
 else:
-    maxf_ngram = analysis_pres.vectorizer_parameter_analysis(vectorizer_type='tfidf', parameters_loop=(1000,10000,1000),
+    maxf_ngram = analysis_pres.vectorizer_parameter_analysis(vectorizer_type='tfidf', parameters_loop=(7000,43000,500),
                                                                n_gram_range=ngram_opt, parameters_tf_idf=tfidf_params,
                                                                parameter_name='max_features',
                                                              undersampling=undersampling_n, oversampling=oversampling_n)
+
 # Model results with max_df tuning - ngram
 if os.path.exists(os.path.join(results_path, f"results_tfidf_max_df_ngram{n1}-{n2}.txt")):
     max_df_ngram = np.loadtxt(os.path.join(results_path, f"results_tfidf_max_df_ngram{n1}-{n2}.txt"), delimiter=",")
 else:
-    max_df_ngram = analysis_pres.vectorizer_parameter_analysis(vectorizer_type='tfidf', parameters_loop=(0.2,0.9,0.1),
+    max_df_ngram = analysis_pres.vectorizer_parameter_analysis(vectorizer_type='tfidf', parameters_loop=(0.2,0.9,0.03),
                                                                   n_gram_range=ngram_opt, parameters_tf_idf=tfidf_params,
                                                                   parameter_name='max_df',
                                                                   undersampling=undersampling_n, oversampling=oversampling_n)
@@ -194,7 +195,7 @@ else:
 if os.path.exists(os.path.join(results_path, f"results_tfidf_min_df_ngram{n1}-{n2}.txt")):
     min_df_ngram = np.loadtxt(os.path.join(results_path, f"results_tfidf_min_df_ngram{n1}-{n2}.txt"), delimiter=",")
 else:
-    min_df_ngram = analysis_pres.vectorizer_parameter_analysis(vectorizer_type='tfidf', parameters_loop=(0.01,0.08,0.01),
+    min_df_ngram = analysis_pres.vectorizer_parameter_analysis(vectorizer_type='tfidf', parameters_loop=(0.002,0.08,0.002),
                                                                    n_gram_range=ngram_opt, parameters_tf_idf=tfidf_params,
                                                                    parameter_name='min_df',
                                                                    undersampling=undersampling_n, oversampling=oversampling_n)
