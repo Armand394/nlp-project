@@ -12,10 +12,12 @@ current_dir = os.getcwd()
 target_path = os.path.join(current_dir, "data", "AFDpresidentutf8", "corpus.tache1.learn.utf8.txt")
 alltxts,alllabs = load_pres(target_path)
 
-alltxts_train, alltxts_test, y_train, y_test = train_test_split(alltxts, alllabs, test_size=0.25, random_state=32, stratify=alllabs)
+alltxts_train, alltxts_test, y_train, y_test = train_test_split(alltxts, alllabs, test_size=0.20 random_state=32, stratify=alllabs)
 alltxts, alllabs = alltxts_train, y_train
-alltxts, alllabs = select_subset(alltxts, alllabs)
-alltxts_test, y_test = select_subset(alltxts_test, y_test)
+
+# Print split
+print("Train/Valid size:", len(alltxts))
+print("Test size:", len(alltxts_test))
 
 print('step 1: processing data')
 # Preprocess text
@@ -204,7 +206,6 @@ analysis_pres.plot_results_tuning([maxf_ngram, max_df_ngram, min_df_ngram], ['ma
 
 # Save best final model for ngram
 best_model_ngram, process_ngram = best_model(maxf_ngram, max_df_ngram, min_df_ngram)
-print(best_model_ngram, process_ngram)
 
 print('step 4: Obtained tuned parameter for best peforming model and process')
 
