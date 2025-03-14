@@ -12,8 +12,6 @@ current_dir = os.getcwd()
 target_path = os.path.join(current_dir, "data", "AFDpresidentutf8", "corpus.tache1.learn.utf8.txt")
 alltxts,alllabs = load_pres(target_path)
 
-# alltxts,alllabs = select_subset(alltxts,alllabs)
-
 alltxts_train, alltxts_test, y_train, y_test = train_test_split(alltxts, alllabs, test_size=0.25, random_state=32, stratify=alllabs)
 alltxts, alllabs = alltxts_train, y_train
 alltxts, alllabs = select_subset(alltxts, alllabs)
@@ -33,8 +31,13 @@ alltxts_clean2 = [textpreprocessor.preprocess_text(text, lemmatize=True, stop_wo
 titles = ['No process', 'stem', 'lemma']
 processed_txts = [alltxts, alltxts_clean1, alltxts_clean2]
 
+# Path to save results
 figures_path = os.path.join(current_dir, "results", "president", "figures")
 results_path = os.path.join(current_dir, "results", "president")
+
+# Create folder if they don't exist
+os.makedirs(results_path, exist_ok=True)
+os.makedirs(figures_path, exist_ok=True)
 
 print('step 2: visualization data')
 # Start vocabulary analysis

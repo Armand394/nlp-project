@@ -40,8 +40,13 @@ alltxts_clean4 = [textpreprocessor.preprocess_text(text, keep_first_n=n_first, k
 titles = ['No process', 'stem', 'lemma', f'lemma F{n_first} - L{n_last}']
 processed_txts = [alltxts, alltxts_clean1, alltxts_clean2, alltxts_clean4]
 
+# Path to save results
 figures_path = os.path.join(current_dir, "results", "movies", "figures")
 results_path = os.path.join(current_dir, "results", "movies")
+
+# Create folder if they don't exist
+os.makedirs(results_path, exist_ok=True)
+os.makedirs(figures_path, exist_ok=True)
 
 print('step 2: visualization data')
 # Start vocabulary analysis
