@@ -140,7 +140,7 @@ class BasicTextClassificationModel:
 
                 # Instantiate the vectorizer
                 vectorizer = VectorizerClass(**param_dict)
-
+                print(vectorizer.get_params)
                 # Fit for given countVectorizer object and compute results
                 score_nb, score_lr, score_svm = self.accuracy_models(txts, vectorizer=vectorizer,
                                                                     undersampling=undersampling, oversampling=oversampling)
