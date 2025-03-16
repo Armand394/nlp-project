@@ -103,7 +103,7 @@ else:
 analysis_pres.plot_results_tuning([tune_maxf, tune_max_df, tune_min_df], ['max_features', 'max_df', 'min_df'], figure_name='count')
 
 # Save best final model for countvectorizer
-best_model_cv, process_cv = best_model(tune_maxf, tune_max_df, tune_min_df)
+best_model_cv, process_cv = best_model(tune_maxf, tune_max_df, tune_min_df, method=2)
 
 print('step 3.2: tuning classification models - tfidf vectorizer')
 # defeault parameter results tfidf vectorizer
@@ -152,7 +152,7 @@ analysis_pres.plot_results_tuning([maxf_tfidf, max_df_tfidf, min_df_tfidf],
                                    ['max_features', 'max_df', 'min_df'], figure_name='tf_idf')
 
 # Retreive model and text process which give best results
-best_model_tfidf, process_tfidf = best_model(maxf_tfidf, max_df_tfidf, min_df_tfidf)
+best_model_tfidf, process_tfidf = best_model(maxf_tfidf, max_df_tfidf, min_df_tfidf, method=2)
 
 print('step 3.3: tuning classification models - n-grams')
 # Results with default tfidf 
@@ -168,6 +168,7 @@ analysis_pres.plot_basic_results(n_grams_basic_results, titles_n_grams, title_fi
 
 # Get best performing n-gram from basic result
 ngram_opt, undersampling_n , oversampling_n = get_best_ngram(n_grams_basic_results, titles_n_grams, sampling=True)
+ngram_opt = (1, 3)
 n1, n2 = ngram_opt
 
 # Evaluate tfidf parameters for best initial results
@@ -175,6 +176,7 @@ tfidf_params = analysis_pres.evaluate_tfidf_variations(undersampling=undersampli
 
 # Model results with max_features tuning - ngram
 if os.path.exists(os.path.join(results_path, f"results_tfidf_max_features_ngram{n1}-{n2}.txt")):
+    print()
     maxf_ngram = np.loadtxt(os.path.join(results_path, f"results_tfidf_max_features_ngram{n1}-{n2}.txt"), delimiter=",")
 else:
     maxf_ngram = analysis_pres.vectorizer_parameter_analysis(vectorizer_type='tfidf', parameters_loop=(9000,45000,500),
@@ -206,7 +208,7 @@ analysis_pres.plot_results_tuning([maxf_ngram, max_df_ngram, min_df_ngram], ['ma
 
 
 # Save best final model for ngram
-best_model_ngram, process_ngram = best_model(maxf_ngram, max_df_ngram, min_df_ngram)
+best_model_ngram, process_ngram = best_model(maxf_ngram, max_df_ngram, min_df_ngram, method=2)
 
 print('step 4: Obtained tuned parameter for best peforming model and process')
 

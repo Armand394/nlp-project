@@ -166,30 +166,6 @@ def get_best_ngram(n_grams_basic_results, titles_n_grams, sampling=False):
     
     return best_ngram_tuple, False, False
 
-
-def optimal_model_CV(nb_scores, lr_scores, svm_scores):
-    
-    nb_scores = np.array(nb_scores)
-    lr_scores = np.array(lr_scores)
-    svm_scores = np.array(svm_scores)
-
-    # Compute the mean over processes for each parameter setting
-    nb_mean = np.mean(nb_scores, axis=0)
-    lr_mean = np.mean(lr_scores, axis=0)
-    svm_mean = np.mean(svm_scores, axis=0)
-    
-    # Extract the best (maximum) average score for each model
-    best_nb = np.max(nb_mean)
-    best_lr = np.max(lr_mean)
-    best_svm = np.max(svm_mean)
-    
-    # Determine which model has the highest best average score,
-    if best_nb > best_lr and best_nb > best_svm:
-        return 'NB', np.argmax(nb_mean)
-    elif best_lr > best_nb and best_lr > best_svm:
-        return 'LR', np.argmax(lr_mean)
-    else:
-        return 'SVM', np.argmax(svm_mean)
     
 def retreive_tuned_param(proccess, model, results_max_features, results_max_df, results_min_df):
 
@@ -337,7 +313,7 @@ def balance_dataset(X, y, undersampling=False, oversampling=False, strategy=0.8,
     return X_resampled, y_resampled
 
 
-def best_model(tune_maxf, tune_max_df, tune_min_df):
+def best_model(tune_maxf, tune_max_df, tune_min_df, method=1):
     
     def results_best_scores(tune_result):
         # Extract models
@@ -362,6 +338,14 @@ def best_model(tune_maxf, tune_max_df, tune_min_df):
 
     # Compute the mean across the third dimension
     average_scores = np.mean(stacked, axis=2)
+    models = {0: "NB", 1:"LR", 2:"SVM"}
+
+    if method == 2:
+        # Get the row and column index of the maximum value
+        proces_id, col_idx = np.unravel_index(np.argmax(average_scores), average_scores.shape)
+        # Choose model
+        model = models[col_idx]
+        return model, proces_id
 
     # Combine process IDs with averaged scores
     final_tune = np.hstack([r_min_df[:, [0]], average_scores])
@@ -374,7 +358,6 @@ def best_model(tune_maxf, tune_max_df, tune_min_df):
     mean = np.mean(numeric_scores, axis=0)
     model_ind = np.argmax(mean)
     # Choose model
-    models = {0: "NB", 1:"LR", 2:"SVM"}
     model = models[model_ind]
 
     # Choose process

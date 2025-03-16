@@ -236,7 +236,7 @@ class BasicTextClassificationModel:
 
         return vectorizer_nb, vectorizer_lr, vectorizer_svm
 
-    def balance_dataset(self, X, y, undersampling=False, oversampling=False, strategy=0.8, random_state=42):
+    def balance_dataset(self, X, y, undersampling=False, oversampling=False, strategy=1.0, random_state=42):
         
         if oversampling and undersampling:
             # Apply SMOTE + Tomek Links (Hybrid method)
