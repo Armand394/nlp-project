@@ -168,7 +168,6 @@ analysis_pres.plot_basic_results(n_grams_basic_results, titles_n_grams, title_fi
 
 # Get best performing n-gram from basic result
 ngram_opt, undersampling_n , oversampling_n = get_best_ngram(n_grams_basic_results, titles_n_grams, sampling=True)
-ngram_opt = (1, 3)
 n1, n2 = ngram_opt
 
 # Evaluate tfidf parameters for best initial results
